@@ -29,4 +29,4 @@ have_header('stdio.h')
 have_header('json.h')
 have_library('json')
 
-create_makefile('json')
+create_makefile('jsonc')

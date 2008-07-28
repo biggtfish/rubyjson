@@ -21,7 +21,7 @@
  *
 =end
 
-require './json'
+require 'jsonc'
 require 'test/unit'
 
 class JSONTest < Test::Unit::TestCase
