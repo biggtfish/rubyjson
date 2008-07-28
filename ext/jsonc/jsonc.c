@@ -231,7 +231,7 @@ VALUE rubyjson_generate(VALUE module, VALUE object)
 /**
  * Initialises JSON Ruby Extension
  */
-void Init_json()
+void Init_jsonc()
 {
 	rubyjson_module = rb_define_module("JSON");
 	rubyjson_version = rb_float_new(0.1);
