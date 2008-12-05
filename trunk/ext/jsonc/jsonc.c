@@ -19,7 +19,7 @@
  * Boston, MA  02110-1301  USA
  */
 #include <ruby.h>
-#include <json.h>
+#include <json/json.h>
 #include <string.h>
 
 #ifdef RJ_DEBUG_ENABLED
@@ -33,11 +33,50 @@
 VALUE rubyjson_module;
 VALUE rubyjson_version;
 
+static VALUE
+rubyjson_parse_json_object(struct json_object*);
+
+/**
+ * Parses a JSON object into a Hash
+ * 
+ * @return Hash
+ */
+static VALUE
+rubyjson_parse_object(struct json_object* obj)
+{
+	VALUE hash = rb_hash_new();
+	
+	json_object_object_foreach(obj, key, value)
+	{
+		rb_hash_aset(hash, rb_str_new2(key), rubyjson_parse_json_object(value));
+	}
+	
+	return hash;
+}
+
+/**
+ * Parses a JSON Array into a Ruby Array
+ * 
+ * @return Array
+ */
+static VALUE
+rubyjson_parse_array(struct json_object* obj)
+{
+	VALUE array = rb_ary_new();
+	int i;
+		
+	for(i = 0; i<json_object_array_length(obj); i++)
+		rb_ary_push(array, rubyjson_parse_json_object(json_object_array_get_idx(obj, i)));
+	
+	return array;
+}
+
 /**
  * Recursively builds a Ruby VALUE using json_object routines.
  * 
  */
-VALUE rubyjson_parse_json_object(struct json_object* object)
+static VALUE
+rubyjson_parse_json_object(struct json_object* object)
 {
 	VALUE result;
 	
@@ -57,10 +96,10 @@ VALUE rubyjson_parse_json_object(struct json_object* object)
 		result = INT2NUM(json_object_get_int(object));
 		break;
 	case json_type_double:
-		result = DOUBLE2NUM(json_object_get_double(object));
+		result = DBL2NUM(json_object_get_double(object));
 		break;
 	case json_type_boolean:
-		result = (json_object_get_boolean ? Qtrue : Qfalse);
+		result = (json_object_get_boolean(object) ? Qtrue : Qfalse);
 		break;
 	case json_type_null:
 		RJ_DEBUG("Adding Null.");
@@ -74,48 +113,16 @@ VALUE rubyjson_parse_json_object(struct json_object* object)
 	return result;
 }
 
-/**
- * Parses a JSON object into a Hash
- * 
- * @return Hash
- */
-VALUE rubyjson_parse_object(struct json_object* obj)
-{
-	VALUE hash = rb_hash_new();
-	
-	json_object_object_foreach (obj, key, value)
-	{
-		RJ_DEBUGF("Adding Key %s to object.", key);
-		rb_hash_aset(hash, rb_str_new2(key), rubyjson_parse_json_object(value));
-		RJ_DEBUG("[OK]");
-	}
-	
-	return hash;
-}
 
-/**
- * Parses a JSON Array into a Ruby Array
- * 
- * @return Array
- */
-VALUE rubyjson_parse_array(struct json_object* obj)
-{
-	VALUE array = rb_ary_new();
-	int i;
-		
-	for(i = 0; i<json_object_array_length(obj); i++)
-		rb_ary_push(array, rubyjson_parse_json_object(json_object_array_get_idx(obj, i)));
-	
-	return array;
-}
 
 /**
  * Parses a JSON string into a Ruby Object
  */
-VALUE rubyjson_parse(VALUE module, VALUE str)
+static VALUE
+rubyjson_parse(VALUE module, VALUE str)
 {
 	struct json_object *object;
-	const char *s; 
+	char *s; 
 	VALUE result = Qnil;
 	
 	/* Mandatory Type Checking */
@@ -135,13 +142,14 @@ VALUE rubyjson_parse(VALUE module, VALUE str)
 	return result;
 }
 
-struct json_object* rubyjson_generate_array(VALUE);
-struct json_object* rubyjson_generate_hash(VALUE);
+static struct json_object* rubyjson_generate_array(VALUE);
+static struct json_object* rubyjson_generate_hash(VALUE);
 
 /**
  * Generates a JSON string from a Ruby Object
  */
-struct json_object* rubyjson_generate_json_object(VALUE object)
+static struct 
+json_object* rubyjson_generate_json_object(VALUE object)
 {
 	struct json_object* json;
 		
@@ -175,7 +183,8 @@ struct json_object* rubyjson_generate_json_object(VALUE object)
 /**
  * Iterator for Ruby Hash pair
  */
-int rubyjson_hash_i(VALUE key, VALUE value, struct json_object* json)
+static int
+rubyjson_hash_i(VALUE key, VALUE value, struct json_object* json)
 {
 	json_object_object_add(json, StringValuePtr(key), rubyjson_generate_json_object(value));
 	return ST_CONTINUE;
@@ -184,7 +193,8 @@ int rubyjson_hash_i(VALUE key, VALUE value, struct json_object* json)
 /**
  * Iterates through a Ruby Hash and generates a json_object*
  */
-struct json_object* rubyjson_generate_hash(VALUE object)
+static struct
+json_object* rubyjson_generate_hash(VALUE object)
 {
 	struct json_object *json = json_object_new_object();
 	
@@ -197,7 +207,8 @@ struct json_object* rubyjson_generate_hash(VALUE object)
 /**
  * Iterates through a Ruby Array and returns a json_object
  */
-struct json_object* rubyjson_generate_array(VALUE object)
+static struct
+json_object* rubyjson_generate_array(VALUE object)
 {
 	struct json_object *json;
 	int i;
@@ -206,7 +217,7 @@ struct json_object* rubyjson_generate_array(VALUE object)
 	
 	for (i=0; i<RARRAY_LEN(object); i++)
 	{
-		json_object_array_add(json, rubyjson_generate_json_object( RARRAY(object)->ptr[i] ));
+		json_object_array_add(json, rubyjson_generate_json_object( RARRAY_PTR(object)[i] ));
 	}
 		
 	return json;
@@ -215,7 +226,8 @@ struct json_object* rubyjson_generate_array(VALUE object)
 /**
  * Generates a JSON string from a Ruby Object
  */
-VALUE rubyjson_generate(VALUE module, VALUE object)
+static VALUE
+rubyjson_generate(VALUE module, VALUE object)
 {
 	VALUE result;
 	
@@ -231,10 +243,10 @@ VALUE rubyjson_generate(VALUE module, VALUE object)
 /**
  * Initialises JSON Ruby Extension
  */
-void Init_jsonc()
+void
+Init_jsonc()
 {
 	rubyjson_module = rb_define_module("JSON");
-	rubyjson_version = rb_float_new(0.1);
 	
 	rb_define_module_function(rubyjson_module, "parse", &rubyjson_parse, 1);
 	rb_define_module_function(rubyjson_module, "generate", &rubyjson_generate, 1);
