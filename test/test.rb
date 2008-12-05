@@ -21,7 +21,11 @@
  *
 =end
 
-require 'jsonc'
+begin
+	require 'jsonc'
+rescue LoadError
+	require '../ext/jsonc/jsonc'
+end
 require 'test/unit'
 
 class JSONTest < Test::Unit::TestCase
@@ -37,10 +41,6 @@ class JSONTest < Test::Unit::TestCase
   def test_parsing()
     assert(JSON::parse(@json_array) == @array)
     assert(JSON::parse(@json_hash) == @hash)
-  end
-  
-  def test_constants()
-    assert(JSON::VERSION, 0.1)
   end
   
   def test_json_generation()
