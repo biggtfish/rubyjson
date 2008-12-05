@@ -1,0 +1,31 @@
+#
+# Ruby Json Extension
+#
+
+Based on json-c library.
+
+INSTALL/COMPILE:
+
+1. Build/Install json-c lib
+
+	cd json-c
+	./configure
+	make
+	sudo make install
+
+2. Build rubyjson extension
+
+	cd ext/jsonc
+	ruby extconf.rb
+	make
+
+3. Test
+
+	cd ext/jsonc
+	ruby ../../test/test.rb
+
+4. Install
+
+	cd ext/jsonc
+	sudo make install
+
