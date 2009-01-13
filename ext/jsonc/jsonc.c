@@ -19,7 +19,7 @@
  * Boston, MA  02110-1301  USA
  */
 #include <ruby.h>
-#include <json/json.h>
+#include <json.h>
 #include <string.h>
 
 #ifdef RJ_DEBUG_ENABLED
@@ -246,7 +246,7 @@ rubyjson_generate(VALUE module, VALUE object)
 void
 Init_jsonc()
 {
-	rubyjson_module = rb_define_module("JSON");
+	rubyjson_module = rb_define_module("JSONC");
 	
 	rb_define_module_function(rubyjson_module, "parse", &rubyjson_parse, 1);
 	rb_define_module_function(rubyjson_module, "generate", &rubyjson_generate, 1);

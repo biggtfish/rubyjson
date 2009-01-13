@@ -141,19 +141,9 @@ extern void json_object_object_del(struct json_object* obj, char *key);
  * @param key the local name for the char* key variable defined in the body
  * @param val the local name for the json_object* object variable defined in the body
  */
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-
-# define json_object_object_foreach(obj,key,val) \
- char *key; struct json_object *val; \
- for(struct lh_entry *entry = json_object_get_object(obj)->head; ({ if(entry) { key = (char*)entry->k; val = (struct json_object*)entry->v; } ; entry; }); entry = entry->next )
-
-#else /* ANSI C or MSC */
-
 # define json_object_object_foreach(obj,key,val) \
  char *key; struct json_object *val; struct lh_entry *entry; \
  for(entry = json_object_get_object(obj)->head; (entry ? (key = (char*)entry->k, val = (struct json_object*)entry->v, entry) : 0); entry = entry->next)
-
-#endif /* defined(__GNUC__) && !defined(__STRICT_ANSI__) */
 
 /** Iterate through all keys and values of an object (ANSI C Safe)
  * @param obj the json_object instance

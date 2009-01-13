@@ -23,10 +23,10 @@
 
 require 'mkmf'
 
-dir_config('json', 'include', 'lib')
+dir_config('json', '../../json-c', '../../json-c')
 
 abort("stdio.h not found.") unless have_header('stdio.h') 
-abort("json.h not found.")  unless have_header('json/json.h') 
+abort("json.h not found.")  unless have_header('json.h') 
 abort("json library not found.") unless have_library('json')
 
 create_makefile('jsonc')
