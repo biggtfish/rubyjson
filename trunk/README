@@ -15,17 +15,25 @@ INSTALL/COMPILE:
 
 2. Build rubyjson extension
 
+	rake
+
+or
+
 	cd ext/jsonc
 	ruby extconf.rb
 	make
 
 3. Test
 
-	cd ext/jsonc
-	ruby ../../test/test.rb
+	rake test
 
 4. Install
 
+	rake gem
+	cd pkg
+	gem install jsonc
+
+or
 	cd ext/jsonc
 	sudo make install
 
